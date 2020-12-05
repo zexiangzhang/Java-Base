@@ -1,12 +1,9 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***双重检测***
-
-    双重检测
-
-```
 /**
- * 线程安全的懒汉式单例（双重检测）
+ * 懒汉模式
+ * 双重检测
+ * 线程安全
  */
 public class LazySingletonSafeDoubleCheck {
 
@@ -28,4 +25,3 @@ public class LazySingletonSafeDoubleCheck {
         return singleton;
     }
 }
-```

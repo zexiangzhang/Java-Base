@@ -1,12 +1,9 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***懒汉模式***
-
-    延迟加载，线程不安全
-
-```
 /**
- * 懒汉式单例模式
+ * 懒汉模式
+ * 延迟加载
+ * 线程不安全
  */
 public class LazySingleton {
 
@@ -25,4 +22,3 @@ public class LazySingleton {
         return singleton;
     }
 }
-```

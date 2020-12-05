@@ -1,14 +1,13 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***同步延迟加载***
-
-    synchronized方法
-
-```
 /**
- * 线程安全的懒汉式单例（同步延迟加载 — synchronized方法）
+ * 懒汉模式
+ * 同步延迟加载
+ * 线程安全
+ * synchronized方法
  */
 public class LazySingletonSafeSynchronizedMethod {
+
     private static LazySingletonSafeSynchronizedMethod singleton;
 
     private LazySingletonSafeSynchronizedMethod(){}
@@ -20,5 +19,5 @@ public class LazySingletonSafeSynchronizedMethod {
         }
         return singleton;
     }
+
 }
-```

@@ -1,12 +1,9 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***同步延迟加载***
-
-    使用内部类延迟加载
-
-```
 /**
- * 线程安全的懒汉式单例（同步延迟加载 — 使用内部类实现延迟加载）
+ * 懒汉模式
+ * 同步延迟加载
+ * 内部类
  */
 public class LazySingletonSafeInnerClass {
 
@@ -21,4 +18,3 @@ public class LazySingletonSafeInnerClass {
         return Holder.singleton;
     }
 }
-```

@@ -1,12 +1,8 @@
-# 饿汉模式
+package com.zexiang.designPatterns.singleton.hungerySingleton;
 
-***饿汉模式***
-
-    立即加载，本身是线程安全的
-
-```
 /**
  * 饿汉式单例模式
+ * 立即加载，本身是线程安全的
  */
 public class HungrySingleton {
 
@@ -20,5 +16,5 @@ public class HungrySingleton {
     public static HungrySingleton getInstance() {
         return singleton;
     }
+
 }
-```

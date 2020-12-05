@@ -1,12 +1,9 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***ThreadLocal***
-
-    ThreadLocal
-
-```
 /**
- * 线程安全的懒汉式单例（ThreadLocal）
+ * 懒汉模式
+ * 线程安全
+ * ThreadLocal
  */
 public class LazySingletonSafeThreadLocal {
 
@@ -31,4 +28,3 @@ public class LazySingletonSafeThreadLocal {
         return threadLocal.get();
     }
 }
-```

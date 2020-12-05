@@ -1,12 +1,10 @@
-# 懒汉模式
+package com.zexiang.designPatterns.singleton.lazySingleton;
 
-***同步延迟加载***
-
-    synchronized块
-
-```
 /**
- * 线程安全的懒汉式单例（同步延迟加载 — synchronized块）
+ * 懒汉模式
+ * 线程安全
+ * 同步延迟加载
+ * synchronized块
  */
 public class LazySingletonSafeSynchronizedBlock {
 
@@ -23,5 +21,5 @@ public class LazySingletonSafeSynchronizedBlock {
         }
         return singleton;
     }
+
 }
-```
