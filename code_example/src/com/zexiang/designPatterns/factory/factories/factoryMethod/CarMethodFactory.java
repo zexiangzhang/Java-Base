@@ -8,6 +8,6 @@ import com.zexiang.designPatterns.factory.interfaces.CommonCar;
 public interface CarMethodFactory {
 
     // 行驶
-    public CommonCar run();
+    CommonCar run();
 
 }

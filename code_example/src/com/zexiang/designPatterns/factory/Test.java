@@ -6,7 +6,7 @@ import com.zexiang.designPatterns.factory.factories.factoryMethod.CarMethodFacto
 import com.zexiang.designPatterns.factory.factories.factoryMethod.implFactories.CadillacFactory;
 import com.zexiang.designPatterns.factory.factories.simpleFactory.CarSimpleFactory;
 
-public class Client {
+public class Test {
 
 
     public static void main(String[] args) {
