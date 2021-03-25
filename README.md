@@ -8,7 +8,7 @@
 
 <font size = 3>&nbsp;&nbsp;&nbsp;&nbsp;[装饰器模式](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/designPatterns/decorator)<br/></font>
 
-<font size = 3>&nbsp;&nbsp;&nbsp;&nbsp;[工厂模式](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/designPatterns/factoryy)<br/></font>
+<font size = 3>&nbsp;&nbsp;&nbsp;&nbsp;[工厂模式](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/designPatterns/factory)<br/></font>
 
 <font size = 3>&nbsp;&nbsp;&nbsp;&nbsp;[观察者模式](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/designPatterns/observerModel)<br/></font>
 

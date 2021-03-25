@@ -40,4 +40,4 @@
 #### 让方法执行
     1. Method.invoke(obj实例对象,obj可变参数);（是有返回值的）
 	
-### ***[点击查看示例](https://www.baidu.com)***
+### ***[点击查看示例](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/reflect/codes)***
