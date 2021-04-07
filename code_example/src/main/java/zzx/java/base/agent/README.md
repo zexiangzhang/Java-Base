@@ -178,7 +178,12 @@ cglib可以在运行期扩展java类或者实现java接口，例如Hibernate用�
 
 cglib的底层是通过使用一个小而快的字节码处理框架ASM，来转换字节码并生成新的类
 
-### cglib主要的实现流程如下：
+### 原理
+
+    动态生成一个要代理类的子类，子类重写要代理的类的所有不是final的方法
+    在子类中采用方法拦截的技术拦截所有父类方法的调用，顺势将横切逻辑织入目标对象
+
+### cglib一般的实现流程如下
 
 	1. 引入cglib的依赖
 		maven工程可以添加如下依赖：
@@ -188,7 +193,212 @@ cglib的底层是通过使用一个小而快的字节码处理框架ASM，来转
 			</dependency>
 		非maven工程需要添加cglib-version.jar和asm-version.jar
 		
-	2. 
+	2. 定义目标对象
+	
+	3.定义拦截器
+	    在调用目标对象的方法时，CGLib会回调MethodInterceptor接口的intercept方法实施拦截，来切入代理逻辑，类似于JDK中的InvocationHandler接口
+	    
+	4.在需要使用目标对象的时候，通过CGLIB动态代理获取代理对象
+	
+CGLIB的Enhancer指定要代理的目标对象(即包含实际业务逻辑的对象),再通过调用create()方法得到代理对象,所有对代理对象的非final方法的调用都会指派给AtmInterceptor.intercept()方法,在intercept()方法中可以加入目标对象之外的业务逻辑，比如参数校验、日志审计、安全检查等功能,通过调用MethodProxy.invokeSuper()方法，将调用转发给原始对象,CGLIG中MethodInterceptor的作用与JDK代理中的InvocationHandler类似，都是方法调用的中转派发
+
+### 相关源码
+
+	// 首先创建Enhancer对象
+	Enhancer enhancer = new Enhancer();
+	// 然后设置超类Superclass
+	enhancer.setSuperclass(TargetClass.class);
+	// 设置自定义的回调对象Callback
+	enhancer.setCallback(new MyMethodInterceptor());
+	// 生成超类的子类
+	TargetClass target = (TargetClass) enhancer.create();
+	
+###### 其中enhancer.create();
+
+	// 代码在org.springframework.cglib.proxy中的Enhancer下
+	public Object create() {
+        this.classOnly = false;
+        this.argumentTypes = null;
+        return this.createHelper();
+    }
+	
+	private Object createHelper() {
+        this.preValidate();
+        Object key = KEY_FACTORY.newInstance(this.superclass != null ? this.superclass.getName() : null, ReflectUtils.getNames(this.interfaces), this.filter == ALL_ZERO ? null : new WeakCacheKey(this.filter), this.callbackTypes, this.useFactory, this.interceptDuringConstruction, this.serialVersionUID);
+        this.currentKey = key;
+        Object result = super.create(key);
+        return result;
+    }
+	
+###### 其中createHelper方法中的super.create(key);
+	// 代码在org.springframework.cglib.core中的AbstractClassGenerator下
+	protected Object create(Object key) {
+        try {
+			//获取当前类加载器，应用类加载器
+            ClassLoader loader = this.getClassLoader();
+            Map<ClassLoader, AbstractClassGenerator.ClassLoaderData> cache = CACHE;
+            AbstractClassGenerator.ClassLoaderData data = (AbstractClassGenerator.ClassLoaderData)cache.get(loader);
+            if (data == null) {
+                Class var5 = AbstractClassGenerator.class;
+                synchronized(AbstractClassGenerator.class) {
+                    cache = CACHE;
+                    data = (AbstractClassGenerator.ClassLoaderData)cache.get(loader);
+                    if (data == null) {
+                        Map<ClassLoader, AbstractClassGenerator.ClassLoaderData> newCache = new WeakHashMap(cache);
+                        //创建AbstractClassGenerator
+						data = new AbstractClassGenerator.ClassLoaderData(loader);
+                        newCache.put(loader, data);
+                        CACHE = newCache;
+                    }
+                }
+            }
+            this.key = key;
+			//调用 get方法获取字节码，如果没有字节码，则会创建字节码
+            Object obj = data.get(this, this.getUseCache());
+            return obj instanceof Class ? this.firstInstance((Class)obj) : this.nextInstance(obj);
+        } catch (Error | RuntimeException var9) {
+            throw var9;
+        } catch (Exception var10) {
+            throw new CodeGenerationException(var10);
+        }
+    }
+	
+	public Object get(AbstractClassGenerator gen, boolean useCache) {
+		if (!useCache) {
+			return gen.generate(this);
+		} else {
+			Object cachedValue = this.generatedClasses.get(gen);
+			return gen.unwrapCachedValue(cachedValue);
+		}
+	}
+	
+	protected Class generate(AbstractClassGenerator.ClassLoaderData data) {
+        Object save = CURRENT.get();
+        CURRENT.set(this);
+        try {
+            ClassLoader classLoader = data.getClassLoader();
+            if (classLoader == null) {
+                throw new IllegalStateException("ClassLoader is null while trying to define class " + this.getClassName() + ". It seems that the loader has been expired from a weak reference somehow. Please file an issue at cglib's issue tracker.");
+            } else {
+                String className;
+                synchronized(classLoader) {
+                    className = this.generateClassName(data.getUniqueNamePredicate());
+                    data.reserveName(className);
+                    this.setClassName(className);
+                }
+
+                Class gen;
+                if (this.attemptLoad) {
+                    try {
+                        gen = classLoader.loadClass(this.getClassName());
+                        Class var23 = gen;
+                        return var23;
+                    } catch (ClassNotFoundException var19) {
+                    }
+                }
+
+                byte[] b = this.strategy.generate(this);
+                className = ClassNameReader.getClassName(new ClassReader(b));
+                ProtectionDomain protectionDomain = this.getProtectionDomain();
+                synchronized(classLoader) {
+                    gen = ReflectUtils.defineClass(className, b, classLoader, protectionDomain, this.contextClass);
+                }
+
+                Class var8 = gen;
+                return var8;
+            }
+        } catch (Error | RuntimeException var20) {
+            throw var20;
+        } catch (Exception var21) {
+            throw new CodeGenerationException(var21);
+        } finally {
+            CURRENT.set(save);
+        }
+    }
+
+###### 其中generate方法中的ReflectUtils.defineClass(className, b, classLoader, protectionDomain, this.contextClass);
+
+	public static Class defineClass(String className, byte[] b, ClassLoader loader, ProtectionDomain protectionDomain, Class<?> contextClass) throws Exception {
+        Class c = null;
+        Lookup lookup;
+        if (contextClass != null && contextClass.getClassLoader() == loader && privateLookupInMethod != null && lookupDefineClassMethod != null) {
+            try {
+                lookup = (Lookup)privateLookupInMethod.invoke((Object)null, contextClass, MethodHandles.lookup());
+                c = (Class)lookupDefineClassMethod.invoke(lookup, b);
+            } catch (InvocationTargetException var14) {
+                Throwable target = var14.getTargetException();
+                if (target.getClass() != LinkageError.class && target.getClass() != IllegalArgumentException.class) {
+                    throw new CodeGenerationException(target);
+                }
+            } catch (Throwable var15) {
+                throw new CodeGenerationException(var15);
+            }
+        }
+
+        if (c == null) {
+            if (protectionDomain == null) {
+                protectionDomain = PROTECTION_DOMAIN;
+            }
+
+            try {
+                Method publicDefineClass = loader.getClass().getMethod("publicDefineClass", String.class, byte[].class, ProtectionDomain.class);
+                c = (Class)publicDefineClass.invoke(loader, className, b, protectionDomain);
+            } catch (InvocationTargetException var12) {
+                if (!(var12.getTargetException() instanceof UnsupportedOperationException)) {
+                    throw new CodeGenerationException(var12.getTargetException());
+                }
+            } catch (Throwable var13) {
+            }
+
+            if (c == null && classLoaderDefineClassMethod != null) {
+                Object[] args = new Object[]{className, b, 0, b.length, protectionDomain};
+
+                try {
+                    if (!classLoaderDefineClassMethod.isAccessible()) {
+                        classLoaderDefineClassMethod.setAccessible(true);
+                    }
+
+                    c = (Class)classLoaderDefineClassMethod.invoke(loader, args);
+                } catch (InvocationTargetException var10) {
+                    throw new CodeGenerationException(var10.getTargetException());
+                } catch (Throwable var11) {
+                    if (!var11.getClass().getName().endsWith("InaccessibleObjectException")) {
+                        throw new CodeGenerationException(var11);
+                    }
+                }
+            }
+        }
+
+        if (c == null && contextClass != null && contextClass.getClassLoader() != loader && privateLookupInMethod != null && lookupDefineClassMethod != null) {
+            try {
+                lookup = (Lookup)privateLookupInMethod.invoke((Object)null, contextClass, MethodHandles.lookup());
+                c = (Class)lookupDefineClassMethod.invoke(lookup, b);
+            } catch (InvocationTargetException var8) {
+                throw new CodeGenerationException(var8.getTargetException());
+            } catch (Throwable var9) {
+                throw new CodeGenerationException(var9);
+            }
+        }
+
+        if (c == null) {
+            throw new CodeGenerationException(THROWABLE);
+        } else {
+            Class.forName(className, true, loader);
+            return c;
+        }
+    }
+	
+###### 总结一下大概就是三个步骤：
+(1) 在generate方法中通过byte[] b = this.strategy.generate(this)生成指定类的Class对象字节数组
+
+(2) 在ReflectUtils.defineClass方法中通过(Class)classLoaderDefineClassMethod.invoke(loader, args)将Class对象字节数组转换为Class对象
+
+(3) 在ReflectUtils.defineClass方法中通过Class.forName方法将Class对象装载到JVM
+	
+
+###### [代码示例](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/agent/dynamicAgent/agentOnCglib)
+	
+
 
 	
 	
