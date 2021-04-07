@@ -22,7 +22,7 @@
 
 <font size = 3>&nbsp;&nbsp;&nbsp;&nbsp;[代理模式](https://github.com/zexiangzhang/Java-Base/tree/main/code_example/src/main/java/zzx/java/base/agent)<br/></font>
 
-## 设计模式还有很多......
+## 设计模式分类
     创建型模式
 	    工厂模式
         单例模式
